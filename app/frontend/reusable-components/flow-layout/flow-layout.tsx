@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 interface Props {
   children: ReactNode;
 }
+// TODO: hide logout when user is not logged in
+// TODO: back button
 
 export function FlowLayout({ children }: Props) {
   return (
