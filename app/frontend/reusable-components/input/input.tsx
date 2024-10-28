@@ -1,37 +1,44 @@
-import React, { ChangeEvent } from 'react';
+import React, { InputHTMLAttributes, useState } from 'react';
 import { UseFormRegisterReturn } from 'react-hook-form';
 import classNames from 'classnames';
 
-interface Props {
+interface Props extends Partial<InputHTMLAttributes<HTMLInputElement>> {
   label: string;
-  onChange?: (value: string) => void;
   isError?: boolean;
+  strength?: number;
   register?: UseFormRegisterReturn;
-  autoFocus?: boolean;
 };
 
-export function Input({ label, onChange, isError, register, autoFocus }: Props) {
+export function Input({ label, isError, strength, register, ...rest }: Props) {
   const id = label.replace(/ /gm, '_');
 
-  function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    onChange?.(event.target.value);
-  }
   return (
-    <div>
-      <label className="block text-sm text-slate-500">{label}</label>
+    <div className="group relative">
+      <label
+        htmlFor={id}
+        className={classNames("block text-sm",
+          {
+            'text-red-500': isError,
+            'text-slate-500': !isError,
+            'group-focus-within:text-[hsla(244,49%,49%,1)]': !isError,
+          }
+        )}
+      >
+        {label}
+      </label>
       <input
         id={id}
         // TODO const file for common colors etc
         className={classNames(
-          "block w-full p-2 border-b-2 border-slate-300 focus:outline-none focus:border-b-2 transition ease-in-out",
+          "block w-full p-2 border-b-2 border-slate-300 focus:outline-none focus:border-b-2 transition duration-500 ease-in-out peer",
           {
-            'focus:animate-errorFlicker': isError,
-            'focus:animate-focusFlicker': !isError,
+            'focus:animate-errorBorderFlicker': isError,
+            'border-red-500': isError,
+            'focus:animate-focusBorderFlicker': !isError,
           }
         )}
-        onChange={handleChange}
         {...register}
-        autoFocus={autoFocus}
+        {...rest}
       />
     </div>
   );
