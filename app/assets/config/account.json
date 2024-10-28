@@ -1,0 +1,7 @@
+{
+    "minUsernameLength": 10,
+    "maxUsernameLength": 50,
+    "minPasswordLength": 20,
+    "maxPasswordLength": 50,
+    "minPasswordStrength": 2
+}

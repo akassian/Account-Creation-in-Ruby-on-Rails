@@ -10,11 +10,12 @@ interface Props extends Partial<InputHTMLAttributes<HTMLInputElement>> {
   label: string;
   // Non-strength related error
   isError?: boolean;
-  strength?: number;
+  strength?: number | null;
   register?: UseFormRegisterReturn;
-};
+  value?: string;
+}
 
-export function PasswordInput({ label, isError, strength, register, ...rest }: Props) {
+export function PasswordInput({ label, isError, strength=null, register, value, ...rest }: Props) {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const id = label.replace(/ /gm, '_');
 
@@ -23,7 +24,9 @@ export function PasswordInput({ label, isError, strength, register, ...rest }: P
     const IconComponent = showPassword ? EyeSlashIcon : EyeIcon;
     return (
       <IconComponent
-        className="cursor-pointer h-5 w-5 fill-current text-slate-500"
+        className={classNames(
+          "cursor-pointer h-5 w-5 fill-current text-slate-500"
+        )}
         onMouseDown={(event) => {
           // Prevent password input from losing focus
           event.preventDefault();
@@ -39,16 +42,17 @@ export function PasswordInput({ label, isError, strength, register, ...rest }: P
         htmlFor={id}
         className={classNames("block text-sm transition duration-500 ease-in-out peer",
           {
-            // Password is invalid length or strength 0
-            'text-red-500': isError || rest.value && (strength ?? 0) < 2,
+            // Password is invalid length or strength < 2 (weak/very weak)
+            'text-red-500': isError || value && (strength ?? 0) < 2,
             // Password strength label coloring
-            'text-yellow-500': rest.value && !isError && strength === 2,
-            'text-lime-500': rest.value && !isError && strength === 3,
-            'text-green-500': rest.value && !isError && strength === 4,
-            // User has yet to enter anything
-            'group-focus-within:text-[hsla(244,49%,49%,1)]': !rest.value && !isError,
-            // User has yet to enter anything
-            'text-slate-500': !rest.value && !isError,
+            'text-yellow-500': value && !isError && strength === 2,
+            'text-lime-500': value && !isError && strength === 3,
+            'text-green-500': value && !isError && strength === 4,
+            // Styling for
+            // Strength based input: No error, user has yet to enter anything
+            // Non-strength based input: No error
+            'group-focus-within:text-[hsla(244,49%,49%,1)]': !isError && (!value || strength === null),
+            'text-slate-500': !isError && (!value || strength === null),
           }
         )}
       >
@@ -58,17 +62,19 @@ export function PasswordInput({ label, isError, strength, register, ...rest }: P
         id={id}
         // TODO const file for common colors etc
         className={classNames(
-          "block w-full p-2 pr-10 border-b-2 border-slate-300 focus:outline-none focus:border-b-2 transition duration-500 ease-in-out peer",
+          "block w-full p-2 pr-10 border-b-2 focus:outline-none focus:border-b-2 transition duration-500 ease-in-out peer",
           {
-            // Password is invalid length or strength 0
-            'border-red-500': isError || rest.value && (strength ?? 0) < 2,
+            // Password is invalid length or strength < 2 (weak/very weak)
+            'border-red-500': isError || value && (strength ?? 0) < 2,
             // Password strength label coloring
-            'border-orange-500': rest.value && !isError && strength === 1,
-            'border-yellow-500': rest.value && !isError && strength === 2,
-            'border-lime-500': rest.value && !isError && strength === 3,
-            'border-green-500': rest.value && !isError && strength === 4,
-            // User has yet to enter anything
-            'focus:animate-focusBorderFlicker': !rest.value && !isError,
+            'border-yellow-500': value && !isError && strength === 2,
+            'border-lime-500': value && !isError && strength === 3,
+            'border-green-500': value && !isError && strength === 4,
+            // Styling for
+            // Strength based input: No error, user has yet to enter anything
+            // Non-strength based input: No error
+            'focus:animate-focusBorderFlicker': !isError && (!value || strength === null),
+            'border-slate-300': !isError && (!value || strength === null),
           }
         )}
         {...register}
@@ -77,7 +83,7 @@ export function PasswordInput({ label, isError, strength, register, ...rest }: P
       />
       
       {/* Eye (toggle field visibility) */}
-      {rest.value && (
+      {value && (
         <div
           className="absolute inset-y-11 right-0 pr-3 flex items-center text-sm leading-5">
           {renderPasswordEye()}

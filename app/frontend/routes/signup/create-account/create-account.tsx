@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 // TODO: lazy load zxcvbn - has a large import cost
@@ -10,12 +10,19 @@ import { Card } from '../../../reusable-components/card/card.tsx';
 import { FlowLayout } from '../../../reusable-components/flow-layout/flow-layout.tsx';
 import { Input } from '../../../reusable-components/input/input.tsx';
 import { verbalPasswordStrength } from '../../../helpers/mappers/password-strength.ts';
+import { PasswordInput } from '../../../reusable-components/input/password-input.tsx';
+import Tooltip from '../../../reusable-components/tooltip/tooltip.tsx';
+import { Direction } from '../../../helpers/constants/directions.enum.ts';
+import { 
+  minUsernameLength,
+  maxUsernameLength,
+  minPasswordLength,
+  maxPasswordLength,
+  minPasswordStrength
+ } from '../../../../assets/config/account.json';
 
 import { ReactComponent as WealthfrontLogo } from '../../../../../public/static/icons/wealthfront.svg';
 import { ReactComponent as InfoIcon } from '../../../../../public/static/icons/circle-info-solid.svg';
-import { PasswordInput } from 'app/frontend/reusable-components/input/password-input.tsx';
-import Tooltip from 'app/frontend/reusable-components/tooltip/tooltip.tsx';
-import { Direction } from 'app/frontend/helpers/constants/directions.enum.ts';
 
 interface FormData {
   username: string;
@@ -23,14 +30,27 @@ interface FormData {
   confirmPassword: string;
 }
 
-//TODO: accessibility, password strength meter, password validation, username validation, username availability check
+/* TODO: 
+accessibility,
+mobile styling,
+password character restriction,
+password <-> username commonality check,
+username character restriction,
+username availability check,
+password symbol requirements
+disable/loading upon submit,
+bot detection/prevention,
+input sanitizing,
+sanitize on ruby side 
+*/
 export function CreateAccount() {
   // TODO: disable inputs when api is loading
-  const [loading, setLoading] = useState<boolean>(false);
+  // const [loading, setLoading] = useState<boolean>(false);
+  const [showConfirmPasswordBlock, setShowConfirmPasswordBlock] = useState<boolean>(false);
   const [passwordTooltipOpen, setPasswordTooltipOpen] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const { control, register, handleSubmit, formState: { errors, isValid }, watch, trigger } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors, isValid }, watch, trigger } = useForm<FormData>({
     // TODO: debounce input change triggers
     mode: 'all',
   });
@@ -40,9 +60,17 @@ export function CreateAccount() {
   const passwordAnalysis = zxcvbn(passwordValue);
 
   useEffect(() => {
-    console.log("triggered");
     passwordValue && trigger('password');
   }, [passwordValue, passwordAnalysis.score]);
+
+  useEffect(() => {
+    // Drop-in confirm password field once password is valid length and has a valid strength
+    !showConfirmPasswordBlock
+    && passwordValue
+    && !errors.password
+    && passwordAnalysis.score >= minPasswordStrength
+    && setShowConfirmPasswordBlock(true);
+  }, [passwordValue, errors.password]);
 
   const onSubmit = (data: FormData) => {
     console.log('Form data:', data);
@@ -51,47 +79,31 @@ export function CreateAccount() {
 
   const renderUsernameField = () => (
     <div className="space-y-5 form-group">
-      {/* TODO: only alphanumeric username characters */}
       <Input
         label="Username"
         isError={!!errors.username}
         register={
-          register('username', { required: 'Username is required', minLength: { value: 10, message: 'Username must be at least 10 characters' }, maxLength: { value: 50, message: 'Username must not exceed 50 characters' } })
+          register('username', {
+            required: 'Username is required',
+            minLength: { value: minUsernameLength, message: `Username must be at least ${minUsernameLength} characters` },
+            maxLength: { value: maxUsernameLength, message: `Username must not exceed ${maxUsernameLength} characters` }
+          })
         }
         autoFocus={true}
       />
       {/* Username input error message */}
       <div className="min-h-[4px]">
-        {errors.username && <div className="text-red-500 text-xs -mt-3">{errors.username.message}</div>}
+        {errors.username &&
+          <div className="text-red-500 text-xs -mt-3">
+            {errors.username.message}
+          </div>
+        }
       </div>
     </div>
   );
 
   const renderPasswordField  = () => (
     <div className="space-y-5 form-group">
-      {/* Controlled, allowing conditional rendering of Eye */}
-      {/* <Controller
-        name="password"
-        control={control}
-        rules={{
-          required: 'Password is required',
-          minLength: { value: 20, message: 'Password must be at least 20 characters' },
-          maxLength: { value: 50, message: 'Password must not exceed 50 characters' },
-          validate: {
-            passwordStrength: () => passwordAnalysis.score >= 2 || "",
-          }
-        }}
-        render={({ field }) => (
-          <PasswordInput
-            label="Password"
-            strength={passwordAnalysis.score}
-            register={register('password')}
-            isError={!!errors.password}
-            {...field}
-          />
-        )}
-      /> */}
-
       <PasswordInput
         label="Password"
         value={passwordValue}
@@ -100,18 +112,17 @@ export function CreateAccount() {
         register={
           register('password', {
             required: 'Password is required',
-            minLength: { value: 20, message: 'Password must be at least 20 characters' },
-            maxLength: { value: 50, message: 'Password must not exceed 50 characters' },
+            minLength: { value: minPasswordLength, message: `Password must be at least ${minPasswordLength} characters` },
+            maxLength: { value: maxPasswordLength, message: `Password must not exceed ${maxPasswordLength} characters` },
             validate: {
-              passwordStrength: () => passwordAnalysis.score >= 2 || "",
+              passwordStrength: () => passwordAnalysis.score >= minPasswordStrength || "",
             }
           })
         }
       />
 
-
       {/* Password error message */}
-      <div className="min-h-[4px]">
+      <div className="min-h-[16px]">
         <div className="-mt-3">
           {errors.password &&
             <div className="text-red-500 text-xs">
@@ -157,29 +168,33 @@ export function CreateAccount() {
   );
 
   const renderConfirmPasswordField  = () => (
-    <div className="space-y-5 form-group">
-      {/* Controlled, allowing conditional rendering of Eye */}
-      <Controller
-        name="confirmPassword"
-        control={control}
-        rules={{
-          required: 'Password confirmation is required',
-          validate: {
-            match: () => confirmPasswordValue === passwordValue || "Passwords do not match",
-          }
-        }}
-        render={({ field }) => (
-          <PasswordInput
-            label="Confirm password"
-            register={register('confirmPassword')}
-            isError={!!errors.confirmPassword}
-            {...field}
-          />
-        )}
+    <div className={classNames(
+        "space-y-5 form-group transition-all duration-1000 ease-in-out",
+        {
+          // Animate Confirm Password field pop-in
+          'opacity-0 max-h-0': !showConfirmPasswordBlock,
+          'opacity-100 max-h-40': showConfirmPasswordBlock,
+        }
+      )}
+    >
+      <PasswordInput
+        label="Confirm password"
+        value={confirmPasswordValue}
+        isError={!!errors.confirmPassword}
+        register={
+          register('confirmPassword', {
+            required: 'Password confirmation is required',
+            validate: (val: string) => {
+              if (watch('password') != val) {
+                return "Passwords do not match";
+              }
+            },
+          })
+        }
       />
 
       {/* Password error message */}
-      <div className="min-h-[4px]">
+      <div className="min-h-[16px]">
         <div className="-mt-3">
           {errors.confirmPassword &&
             <div className="text-red-500 text-xs">
@@ -196,19 +211,27 @@ export function CreateAccount() {
 
   return (
     <FlowLayout>
-      {/* TODO: mobile responsiveness */}
       <div className="max-w-[500px] mx-auto">
         <Card title="Create New Account" logo={<WealthfrontLogo className="h-12 w-12" />}>
-          {/* TODO: disable/loading upon submit, investigate TODO, bot detection, input sanitizing, sanitize on ruby side */}
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-6">
             {renderUsernameField()}
             {renderPasswordField()}
             {renderConfirmPasswordField()}
-            <Button disabled={loading} type="submit" className="rounded-xl w-full text-center py-4">
-              Create Account
-            </Button>
+            <div className={classNames("transition duration-500 ease-in-out",
+                // Lighten button while form is not yet valid
+                // It is a good practice to not disable the form button until submission
+                // Allows for manual form validation triggering / focus jumping
+                {
+                  'opacity-50': !isValid,
+                }
+              )}
+            >
+              <Button disabled={loading} type="submit" className="rounded-xl w-full text-center py-4">
+                Create Account
+              </Button>
+            </div>
           </form>
         </Card>
       </div>
