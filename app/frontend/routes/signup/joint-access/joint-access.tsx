@@ -3,6 +3,7 @@ import { Button } from '../../../reusable-components/button/button.tsx';
 import { Card } from '../../../reusable-components/card/card.tsx';
 import { FlowLayout } from '../../../reusable-components/flow-layout/flow-layout.tsx';
 import { Input } from '../../../reusable-components/input/input';
+import { Routes } from 'app/frontend/helpers/constants/routes.enum.ts';
 
 export function JointAccess() {
   return (
@@ -15,7 +16,7 @@ export function JointAccess() {
           <Input label="First name" />
           <Input label="Last name" />
           <Input label="Email" />
-          <Button href="/signup/stock-restrictions">Continue</Button>
+          <Button href={Routes.STOCK_RESTRICTIONS}>Continue</Button>
         </div>
       </Card>
     </FlowLayout>

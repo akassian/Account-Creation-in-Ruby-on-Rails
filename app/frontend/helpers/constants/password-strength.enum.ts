@@ -1,7 +1,7 @@
 export enum PasswordStrength {
-    VeryWeak = "Password is very weak",
-    Weak = "Password is weak",
-    Acceptable = "Acceptable",
-    Good = "Good",
-    Strong = "Strong"
+    VERY_WEAK = "Password is very weak",
+    WEAK = "Password is weak",
+    ACCEPTABLE = "Acceptable",
+    GOOD = "Good",
+    STRONG = "Strong"
 }

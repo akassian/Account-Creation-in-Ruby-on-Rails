@@ -7,35 +7,36 @@ import { CreateUser } from './routes/signup/create-user/create-user.tsx';
 import { Deposit } from './routes/signup/deposit/deposit.tsx';
 import { JointAccess } from './routes/signup/joint-access/joint-access.tsx';
 import { StockRestrictions } from './routes/signup/stock-restrictions/stock-restrictions.tsx';
+import { Routes } from './helpers/constants/routes.enum.ts';
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: Routes.ROOT,
     // TODO: handle logged in redirect vs logged out redirect
-    element: <Navigate to="/create-account" replace />,
+    element: <Navigate to={Routes.CREATE_ACCOUNT} replace />,
   },
   {
-    path: '/signup/account-selection',
+    path: Routes.ACCOUNT_SELECTION,
     element: <AccountSelection />,
   },
   {
-    path: '/create-account',
+    path: Routes.CREATE_ACCOUNT,
     element: <CreateAccount />,
   },
   {
-    path: '/signup/create-user',
+    path: Routes.CREATE_USER,
     element: <CreateUser />,
   },
   {
-    path: '/signup/joint-access',
+    path: Routes.JOINT_ACCESS,
     element: <JointAccess />,
   },
   {
-    path: '/signup/stock-restrictions',
+    path: Routes.STOCK_RESTRICTIONS,
     element: <StockRestrictions />,
   },
   {
-    path: '/signup/deposit',
+    path: Routes.DEPOSIT,
     element: <Deposit />,
   },
 ]);

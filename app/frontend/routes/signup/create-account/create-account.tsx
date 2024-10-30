@@ -30,22 +30,22 @@ interface FormData {
   confirmPassword: string;
 }
 
-/* TODO: 
-accessibility,
-mobile styling,
-password character restriction,
-password <-> username commonality check,
-username character restriction,
-username availability check,
-password symbol requirements
-disable/loading upon submit,
-bot detection/prevention,
-input sanitizing,
-sanitize on ruby side 
+/** TODO: 
+* accessibility,
+* mobile styling,
+* password character restriction,
+* password <-> username commonality check,
+* username character restriction,
+* username availability check,
+* password symbol requirements
+* disable/loading upon submit,
+* bot detection/prevention,
+* input sanitizing,
+* sanitize on ruby side 
 */
 export function CreateAccount() {
   // TODO: disable inputs when api is loading
-  // const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [showConfirmPasswordBlock, setShowConfirmPasswordBlock] = useState<boolean>(false);
   const [passwordTooltipOpen, setPasswordTooltipOpen] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -60,11 +60,14 @@ export function CreateAccount() {
   const passwordAnalysis = zxcvbn(passwordValue);
 
   useEffect(() => {
+    // Retrigger strength validation on password change
     passwordValue && trigger('password');
+    // Updating Password if Confirm Password filled retriggers validation on Confirm Password
+    passwordValue && confirmPasswordValue && trigger('confirmPassword');
   }, [passwordValue, passwordAnalysis.score]);
 
+  // Drop-in Confirm Password field once password valid length / strength
   useEffect(() => {
-    // Drop-in confirm password field once password is valid length and has a valid strength
     !showConfirmPasswordBlock
     && passwordValue
     && !errors.password
@@ -114,6 +117,7 @@ export function CreateAccount() {
             required: 'Password is required',
             minLength: { value: minPasswordLength, message: `Password must be at least ${minPasswordLength} characters` },
             maxLength: { value: maxPasswordLength, message: `Password must not exceed ${maxPasswordLength} characters` },
+            // TODO: password symbol requirements (1 letter, 1 number, 1 symbol?, 1 uppercase?)
             validate: {
               passwordStrength: () => passwordAnalysis.score >= minPasswordStrength || "",
             }
@@ -134,7 +138,6 @@ export function CreateAccount() {
             <div className={classNames(
               "text-xs flex",
               {
-                // Password strength message coloring
                 'text-red-500': passwordAnalysis.score < 2,
                 'text-yellow-500': passwordAnalysis.score === 2,
                 'text-lime-500': passwordAnalysis.score === 3,
@@ -143,7 +146,7 @@ export function CreateAccount() {
             )}>
               {passwordAnalysis.score < 2 &&
                 <Tooltip
-                  direction={Direction.Left}
+                  direction={Direction.LEFT}
                   isOpen={passwordTooltipOpen}
                   setOpen={setPasswordTooltipOpen}
                   content={
@@ -151,7 +154,7 @@ export function CreateAccount() {
                       {passwordAnalysis.feedback?.warning}.
                       <ul>
                         {passwordAnalysis.feedback?.suggestions.map((suggestion, index) => (
-                        <li key={index}>• {suggestion}</li>
+                          <li key={index}>• {suggestion}</li>
                         ))}
                       </ul>
                     </>
@@ -169,9 +172,9 @@ export function CreateAccount() {
 
   const renderConfirmPasswordField  = () => (
     <div className={classNames(
+        // Animate Confirm Password field pop-in
         "space-y-5 form-group transition-all duration-1000 ease-in-out",
         {
-          // Animate Confirm Password field pop-in
           'opacity-0 max-h-0': !showConfirmPasswordBlock,
           'opacity-100 max-h-40': showConfirmPasswordBlock,
         }
@@ -220,9 +223,9 @@ export function CreateAccount() {
             {renderPasswordField()}
             {renderConfirmPasswordField()}
             <div className={classNames("transition duration-500 ease-in-out",
-                // Lighten button while form is not yet valid
-                // It is a good practice to not disable the form button until submission
-                // Allows for manual form validation triggering / focus jumping
+                // Visually lighten button while form is not yet valid
+                // It is a good practice to NOT fully disable the form button until submission
+                // Allows for manual user form validation triggering / focus jumping
                 {
                   'opacity-50': !isValid,
                 }

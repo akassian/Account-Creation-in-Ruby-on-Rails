@@ -11,7 +11,7 @@ interface TooltipProps {
     direction?: Direction;
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ isOpen, setOpen, content, button, direction = Direction.Down }) => {
+const Tooltip: React.FC<TooltipProps> = ({ isOpen, setOpen, content, button, direction = Direction.DOWN }) => {
     const tooltipRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -39,8 +39,8 @@ const Tooltip: React.FC<TooltipProps> = ({ isOpen, setOpen, content, button, dir
                     className={classNames(
                         'absolute mt-2 w-64 p-2 bg-white border border-gray-300 rounded shadow-lg z-10',
                         {
-                            'left-0': direction === Direction.Down,
-                            '-top-10 right-8': direction === Direction.Left
+                            'left-0': direction === Direction.DOWN,
+                            '-top-10 right-8': direction === Direction.LEFT
                         }
                     )}
                 >

@@ -1,7 +1,7 @@
 import { PasswordStrength } from "../constants/password-strength.enum";
 
 export const verbalPasswordStrength = (score: number): string =>
-    [PasswordStrength.VeryWeak, PasswordStrength.Weak, PasswordStrength.Acceptable, PasswordStrength.Good, PasswordStrength.Strong][score] || "";
+    [PasswordStrength.VERY_WEAK, PasswordStrength.WEAK, PasswordStrength.ACCEPTABLE, PasswordStrength.GOOD, PasswordStrength.STRONG][score] || "";
 
 // export const passwordStrengthColor = (score: number): string =>
 //     [Colors.SolidRed, Colors.SolidOrange, Colors.SolidYellow, Colors.SolidLime, Colors.SolidGreen][score] || "";
