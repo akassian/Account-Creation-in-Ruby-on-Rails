@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  "transform": {
-    "^.+\\.svg$": "jest-transform-stub",
-  }
+  moduleNameMapper: {
+    '\\.(svg)$': '<rootDir>/__mocks__/svgMock.js',
+  },
 };

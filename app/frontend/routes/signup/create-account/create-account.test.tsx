@@ -9,15 +9,20 @@ import store from '../../../store';
 
 import { 
   minUsernameLength,
-  // maxUsernameLength,
+  maxUsernameLength,
   minPasswordLength,
-  // maxPasswordLength,
-  // minPasswordStrength
+  maxPasswordLength
  } from '../../../../assets/config/account.json';
 
 describe('CreateAccount', () => {
   beforeEach(() => {
-    renderWithRedux(<CreateAccount />);
+    render(
+      <Provider store={store}>
+        <BrowserRouter>
+          <CreateAccount />
+        </BrowserRouter>
+      </Provider>
+    )
   });
 
   test('renders the CreateAccount component', () => {
@@ -30,11 +35,11 @@ describe('CreateAccount', () => {
     fireEvent.click(screen.getByText('Create Account'));
 
     await waitFor(() => {
-      expect(screen.getByText('Required')).not.toBeNull();
+      expect(screen.getAllByText('Required').length).toBeGreaterThan(0);
     });
   });
 
-  test('shows error message for invalid username', async () => {
+  test('shows error message for too short username', async () => {
     fireEvent.input(screen.getByLabelText('Username'), { target: { value: 'short' } });
     fireEvent.click(screen.getByText('Create Account'));
 
@@ -43,12 +48,41 @@ describe('CreateAccount', () => {
     });
   });
 
-  test('shows error message for invalid password', async () => {
+  test('shows error message for too long username', async () => {
+    fireEvent.input(screen.getByLabelText('Username'), { target: { value: 'longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong' } });
+    fireEvent.click(screen.getByText('Create Account'));
+
+    await waitFor(() => {
+      expect(screen.getByText(`Must not exceed ${maxUsernameLength} characters`)).not.toBeNull();
+    });
+  });
+
+  test('shows error message for too short password', async () => {
     fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'short' } });
     fireEvent.click(screen.getByText('Create Account'));
 
     await waitFor(() => {
       expect(screen.getByText(`Must be at least ${minPasswordLength} characters`)).not.toBeNull();
+    });
+  });
+
+  test('shows error message for too long password', async () => {
+    fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong' } });
+    fireEvent.click(screen.getByText('Create Account'));
+
+    await waitFor(() => {
+      expect(screen.getByText(`Must not exceed ${maxPasswordLength} characters`)).not.toBeNull();
+    });
+  });
+
+  test('shows error message for password with repeating characters', async () => {
+    fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'aaaaaaaaaaaaaaaaaaaaaaaa' } });
+    fireEvent.click(screen.getByText('Create Account'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Must contain a letter, number, and a symbol')).not.toBeNull();
+      expect(screen.getByText('Password is very weak')).not.toBeNull();
+
     });
   });
 
@@ -62,10 +96,22 @@ describe('CreateAccount', () => {
     });
   });
 
+  test('shows error message for invalid username symbols, and password matching username', async () => {
+    fireEvent.input(screen.getByLabelText('Username'), { target: { value: 'validpasswordvalidpassword123!' } });
+    fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'validpasswordvalidpassword123!' } });
+    fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'validpasswordvalidpassword123!' } });
+    fireEvent.click(screen.getByText('Create Account'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Must not be the same as the username')).not.toBeNull();
+      expect(screen.getByText('Must contain only alphanumeric characters')).not.toBeNull();
+    });
+  });
+
   test('submits the form with valid data', async () => {
     fireEvent.input(screen.getByLabelText('Username'), { target: { value: 'validusername123' } });
-    fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'validpassword123!' } });
-    fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'validpassword123!' } });
+    fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'validpasswordvalidpassword123!' } });
+    fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'validpasswordvalidpassword123!' } });
 
     fireEvent.click(screen.getByText('Create Account'));
 

@@ -32,7 +32,7 @@ class User < ApplicationRecord
   def validate_password
     if password.blank? || password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH
       errors.add(:password, "Password must be between #{MIN_PASSWORD_LENGTH} and #{MAX_PASSWORD_LENGTH} characters")
-    elsif password.downcase == username.downcase
+    elsif !username.blank? && password.downcase == username.downcase
       errors.add(:password, "Password cannot be the same as the username")
     # TODO: move regex to common config
     elsif !password.match(/(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_+=\[\]{}~])/)
