@@ -6,3 +6,8 @@
 //     SolidLime = 'lime-500',
 //     SolidGreen = 'green-500'
 // }
+
+export enum Variant {
+    ERROR = 'error',
+    WARNING = 'warning',
+}

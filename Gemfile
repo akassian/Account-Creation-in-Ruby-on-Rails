@@ -21,6 +21,7 @@ gem "importmap-rails", "1.2.1"
 
 gem 'zxcvbn', '0.1.9'
 gem 'bcrypt', '~> 3.1.20'
+gem 'jwt', '~> 1.5', '>= 1.5.4'
 
 
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]

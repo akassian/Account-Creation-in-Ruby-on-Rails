@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   get '/', to: 'application#render_react', as: :root
   get '/create-account', to: 'application#render_react', as: :create_account
   get 'signup/*all', to: 'application#render_react', as: :signup
+  get 'logout', to: 'application#logout', as: :logout
 
   # API routes
   # Account creation

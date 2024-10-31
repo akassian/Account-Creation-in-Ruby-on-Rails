@@ -2,7 +2,7 @@ import React, { InputHTMLAttributes, useState } from 'react';
 import { UseFormRegisterReturn } from 'react-hook-form';
 import classNames from 'classnames';
 
-import { InputType } from 'app/frontend/helpers/constants/input.enum';
+import { InputType } from '../../helpers/constants/input.enum';
 
 import { ReactComponent as EyeIcon } from '../../../../public/static/icons/eye-solid.svg';
 import { ReactComponent as EyeSlashIcon } from '../../../../public/static/icons/eye-slash-solid.svg';

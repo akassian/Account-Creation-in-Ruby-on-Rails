@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import classNames from 'classnames';
 
-import { Direction } from 'app/frontend/helpers/constants/directions.enum';
+import { Direction } from '../../helpers/constants/directions.enum';
 
 interface TooltipProps {
     isOpen: boolean;

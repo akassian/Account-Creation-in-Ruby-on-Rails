@@ -10,7 +10,7 @@ interface Props extends Partial<ButtonHTMLAttributes<HTMLButtonElement>> {
 
 export function Button({ className, href, children, ...rest }: Props) {
   const navigate = useNavigate();
-  const classes = `inline-block py-3 px-6 bg-[hsla(244,49%,49%,1)] text-white disabled:cursor-not-allowed disabled:opacity-50 hover:scale-[1.01] hover:opacity-80 active:opacity-100 active:scale-[.98] transition duration-500 ease-in-out ${className}`;
+  const classes = `cursor-pointer inline-block py-3 px-6 bg-[hsla(244,49%,49%,1)] text-white disabled:cursor-not-allowed disabled:opacity-50 hover:scale-[1.01] hover:opacity-80 active:opacity-100 active:scale-[.98] transition duration-500 ease-in-out ${className}`;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (href) {

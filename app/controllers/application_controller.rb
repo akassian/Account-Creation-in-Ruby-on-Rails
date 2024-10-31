@@ -3,6 +3,12 @@ class ApplicationController < ActionController::Base
     react
   end
 
+  def logout
+    # TODO: handle JWT logout
+    cookies.signed[:jwt] = ''
+    redirect_to '/'
+  end
+
   private
 
   def react

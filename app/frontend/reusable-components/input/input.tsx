@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, useState } from 'react';
+import React, { InputHTMLAttributes } from 'react';
 import { UseFormRegisterReturn } from 'react-hook-form';
 import classNames from 'classnames';
 
@@ -30,11 +30,12 @@ export function Input({ label, isError, strength, register, ...rest }: Props) {
         id={id}
         // TODO const file for common colors etc
         className={classNames(
-          "block w-full p-2 border-b-2 border-slate-300 focus:outline-none focus:border-b-2 transition duration-500 ease-in-out peer",
+          "block w-full p-2 border-b-2 focus:outline-none focus:border-b-2 transition duration-500 ease-in-out peer",
           {
             'focus:animate-errorBorderFlicker': isError,
             'border-red-500': isError,
             'focus:animate-focusBorderFlicker': !isError,
+            'border-slate-300': !isError,
           }
         )}
         {...register}

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
+import { useDispatch, useSelector } from 'react-redux';
 // TODO: lazy load zxcvbn - has a large import cost
 import zxcvbn from 'zxcvbn';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 import { Button } from '../../../reusable-components/button/button.tsx';
 import { Card } from '../../../reusable-components/card/card.tsx';
@@ -20,9 +22,16 @@ import {
   maxPasswordLength,
   minPasswordStrength
  } from '../../../../assets/config/account.json';
+import { RootState } from '../../../store.ts';
+import { createAccount } from '../../../slices/createAccountSlice.ts';
+import { AppDispatch } from '../../../store.ts';
+import { Routes, Status } from '../../../helpers/constants/routes.enum.ts';
+import { Banner } from '../../../reusable-components/banner/banner.tsx';
+import { alphaNumericRegex, onKeyDownAlphanumeric, onKeyDownAlphanumericSafeSymbols, passwordSymbolRequirementsRegex } from '../../../helpers/input/input-helper.ts';
 
 import { ReactComponent as WealthfrontLogo } from '../../../../../public/static/icons/wealthfront.svg';
 import { ReactComponent as InfoIcon } from '../../../../../public/static/icons/circle-info-solid.svg';
+import { getFirstErrorMessage } from '../../../helpers/axios/error.ts';
 
 interface FormData {
   username: string;
@@ -30,24 +39,22 @@ interface FormData {
   confirmPassword: string;
 }
 
-/** TODO: 
+// TODO: replace with real key, encrypt in credentials.yml
+const RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+
+/** TODO:
+* error handling,
+* migrate inline style to css/scss files,
 * accessibility,
-* mobile styling,
-* password character restriction,
-* password <-> username commonality check,
-* username character restriction,
-* username availability check,
-* password symbol requirements
-* disable/loading upon submit,
-* bot detection/prevention,
-* input sanitizing,
-* sanitize on ruby side 
+* mobile responsive styling,
+* additional bot detection/prevention/honeypot,
 */
 export function CreateAccount() {
-  // TODO: disable inputs when api is loading
-  const [loading, setLoading] = useState<boolean>(false);
+  const { loading, error } = useSelector((state: RootState) => state.createAccount);
   const [showConfirmPasswordBlock, setShowConfirmPasswordBlock] = useState<boolean>(false);
   const [passwordTooltipOpen, setPasswordTooltipOpen] = useState<boolean>(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors, isValid }, watch, trigger } = useForm<FormData>({
@@ -55,6 +62,7 @@ export function CreateAccount() {
     mode: 'all',
   });
 
+  const isValidAndRecaptchaComplete = isValid && recaptchaToken;
   const passwordValue = watch('password', '');
   const confirmPasswordValue = watch('confirmPassword', '');
   const passwordAnalysis = zxcvbn(passwordValue);
@@ -76,25 +84,37 @@ export function CreateAccount() {
   }, [passwordValue, errors.password]);
 
   const onSubmit = (data: FormData) => {
-    console.log('Form data:', data);
-    isValid && navigate("/signup/create-user");
+    const { confirmPassword, ...accountData } = data;
+
+    if (isValidAndRecaptchaComplete) {
+      dispatch(createAccount({...accountData, recaptchaToken })).then((result) => {
+        if (result.meta.requestStatus === Status.FULFILLED)
+          navigate(Routes.ACCOUNT_SELECTION);
+      });
+    }
   };
 
   const renderUsernameField = () => (
     <div className="space-y-5 form-group">
       <Input
         label="Username"
+        disabled={loading}
         isError={!!errors.username}
+        onKeyDown={onKeyDownAlphanumeric}
         register={
           register('username', {
-            required: 'Username is required',
-            minLength: { value: minUsernameLength, message: `Username must be at least ${minUsernameLength} characters` },
-            maxLength: { value: maxUsernameLength, message: `Username must not exceed ${maxUsernameLength} characters` }
+            required: 'Required',
+            minLength: { value: minUsernameLength, message: `Must be at least ${minUsernameLength} characters` },
+            maxLength: { value: maxUsernameLength, message: `Must not exceed ${maxUsernameLength} characters` },
+            pattern: {
+              value: alphaNumericRegex,
+              message: 'Must contain only alphanumeric characters'
+            }
           })
         }
         autoFocus={true}
       />
-      {/* Username input error message */}
+      {/* Username error message */}
       <div className="min-h-[4px]">
         {errors.username &&
           <div className="text-red-500 text-xs -mt-3">
@@ -109,17 +129,23 @@ export function CreateAccount() {
     <div className="space-y-5 form-group">
       <PasswordInput
         label="Password"
+        disabled={loading}
         value={passwordValue}
         strength={passwordAnalysis.score}
         isError={!!errors.password}
+        onKeyDown={onKeyDownAlphanumericSafeSymbols}
         register={
           register('password', {
-            required: 'Password is required',
-            minLength: { value: minPasswordLength, message: `Password must be at least ${minPasswordLength} characters` },
-            maxLength: { value: maxPasswordLength, message: `Password must not exceed ${maxPasswordLength} characters` },
-            // TODO: password symbol requirements (1 letter, 1 number, 1 symbol?, 1 uppercase?)
+            required: 'Required',
+            minLength: { value: minPasswordLength, message: `Must be at least ${minPasswordLength} characters` },
+            maxLength: { value: maxPasswordLength, message: `Must not exceed ${maxPasswordLength} characters` },
+            pattern: {
+              value: passwordSymbolRequirementsRegex,
+              message: 'Must contain a letter, number, and a symbol'
+            },
             validate: {
               passwordStrength: () => passwordAnalysis.score >= minPasswordStrength || "",
+              passwordEqualsUsername: (val: string) =>  val.toLowerCase() !== watch('username').toLowerCase() || "Must not be the same as the username"
             }
           })
         }
@@ -134,7 +160,9 @@ export function CreateAccount() {
             </div>
           }
           {/* Password strength error messages */}
-          {passwordValue && errors.password?.type !== 'maxLength' && errors.password?.type !== 'minLength' &&
+          {passwordValue
+            && errors.password?.type !== 'maxLength'
+            && errors.password?.type !== 'minLength' &&
             <div className={classNames(
               "text-xs flex",
               {
@@ -172,49 +200,56 @@ export function CreateAccount() {
 
   const renderConfirmPasswordField  = () => (
     <div className={classNames(
-        // Animate Confirm Password field pop-in
-        "space-y-5 form-group transition-all duration-1000 ease-in-out",
-        {
-          'opacity-0 max-h-0': !showConfirmPasswordBlock,
-          'opacity-100 max-h-40': showConfirmPasswordBlock,
-        }
+      // Animate Confirm Password field drop-in
+      "space-y-5 form-group transition-all duration-1000 ease-in-out",
+      {
+        'opacity-0 max-h-0': !showConfirmPasswordBlock,
+        'opacity-100 max-h-40': showConfirmPasswordBlock,
+      }
       )}
     >
       <PasswordInput
-        label="Confirm password"
-        value={confirmPasswordValue}
-        isError={!!errors.confirmPassword}
-        register={
-          register('confirmPassword', {
-            required: 'Password confirmation is required',
-            validate: (val: string) => {
-              if (watch('password') != val) {
-                return "Passwords do not match";
-              }
-            },
-          })
-        }
+      label="Confirm Password"
+      disabled={loading}
+      value={confirmPasswordValue}
+      isError={!!errors.confirmPassword}
+      onKeyDown={onKeyDownAlphanumericSafeSymbols}
+      register={
+        register('confirmPassword', {
+        required: 'Required',
+        validate: (val: string) => {
+          if (watch('password') != val) {
+          return "Passwords do not match";
+          }
+        },
+        })
+      }
       />
 
       {/* Password error message */}
       <div className="min-h-[16px]">
-        <div className="-mt-3">
-          {errors.confirmPassword &&
-            <div className="text-red-500 text-xs">
-              {errors.confirmPassword.message}
-            </div>
-          }
+      <div className="-mt-3">
+        {errors.confirmPassword &&
+        <div className="text-red-500 text-xs">
+          {errors.confirmPassword.message}
         </div>
+        }
       </div>
+      </div>
+
+      {/* reCAPTCHA */}
+      <ReCAPTCHA
+        className="flex justify-center"
+        sitekey={RECAPTCHA_SITE_KEY}
+        onChange={setRecaptchaToken}
+      />
     </div>
   );
-
-  console.log("errors", errors);
-  console.log("passwordAnalysis.score", passwordAnalysis.score);
 
   return (
     <FlowLayout>
       <div className="max-w-[500px] mx-auto">
+        <Banner content={error ? getFirstErrorMessage(error) : ""} hidden={!error} />
         <Card title="Create New Account" logo={<WealthfrontLogo className="h-12 w-12" />}>
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -227,11 +262,11 @@ export function CreateAccount() {
                 // It is a good practice to NOT fully disable the form button until submission
                 // Allows for manual user form validation triggering / focus jumping
                 {
-                  'opacity-50': !isValid,
+                  'opacity-50': !isValidAndRecaptchaComplete,
                 }
               )}
             >
-              <Button disabled={loading} type="submit" className="rounded-xl w-full text-center py-4">
+              <Button disabled={loading} type="submit" className="rounded-xl w-full text-center py-4 mt-4">
                 Create Account
               </Button>
             </div>

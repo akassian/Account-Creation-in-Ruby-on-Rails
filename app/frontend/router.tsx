@@ -1,6 +1,5 @@
 import React from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
-import { Root } from './routes/root/root.tsx';
 import { AccountSelection } from './routes/signup/account-selection/account-selection.tsx';
 import { CreateAccount } from './routes/signup/create-account/create-account.tsx';
 import { CreateUser } from './routes/signup/create-user/create-user.tsx';

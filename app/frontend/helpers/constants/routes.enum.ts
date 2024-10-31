@@ -7,3 +7,15 @@ export enum Routes {
     STOCK_RESTRICTIONS = '/signup/stock-restrictions',
     DEPOSIT = '/signup/deposit'
 }
+
+export enum ApiRoutes {
+    CREATE_ACCOUNT = '/api/create-account'
+}
+
+export enum Status {
+    PENDING = 'pending',
+    FULFILLED = 'fulfilled',
+    REJECTED = 'rejected'
+}
+
+export const PUBLIC_ROUTES = [Routes.ROOT, Routes.CREATE_ACCOUNT];

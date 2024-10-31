@@ -1,29 +1,49 @@
 # frozen_string_literal: true
+
 # TODO:
-# JWT handshake (should validate it is from browser)
-# Password/username validations (requirements, symbols, username <-> password common chars, strength)
-# sanitization of input before inserting to DB
-# Bot detection
-# HTTPS?
-# Captcha on Frontend?
-# Rate limiting by IP (handle on BE app level)
-# Error messages should be vague
+# JWT handshake middleware
+# Bot detection honeypot
+# HTTPS
+# Rate limiting by IP middleware
 class ApiController < ApplicationController
-  # disable CSRF protection for local testing
-  protect_from_forgery with: :null_session
+  # CSRF protection
+  protect_from_forgery with: :exception, unless: -> { request.format.json? }
+  rescue_from ActionController::InvalidAuthenticityToken do
+    render json: { csrf: ['Session has expired, please refresh the page'] }, status: :unprocessable_entity
+  end
 
   def create_account
-    @user = User.new(user_params)
-    if @user.save
-      render json: @user, status: :created
-    else
-      render json: @user.errors, status: :unprocessable_entity
+    recaptcha_token = params[:recaptchaToken]
+    if verify_recaptcha(recaptcha_token)
+      @user = User.new(username: user_params[:username], password: user_params[:password])
+      if @user.save
+        token = JsonWebToken.encode(user_id: @user.user_id)
+        cookies.signed[:jwt] = { value: token, httponly: true, secure: Rails.env.production? }
+        # Do not expose response signup data to client
+        render json: { token: token }, status: :created
+      else
+        render json: @user.errors, status: :unprocessable_entity
+      end
+    else 
+      render json: { recaptcha: ['reCAPTCHA verification failed'] }, status: :unprocessable_entity
     end
   end
 
   private
 
   def user_params
-    params.permit(:username, :password)
+    params.permit(:username, :password, :recaptchaToken)
+  end
+
+  def verify_recaptcha(token)
+    # TODO: replace with real key, encrypt in credentials.yml
+    # Test keys pass any recaptcha
+    # https://developers.google.com/recaptcha/docs/faq
+    secret_key = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+    # TODO: move url to const / config file
+    uri = URI.parse("https://www.google.com/recaptcha/api/siteverify")
+    response = Net::HTTP.post_form(uri, { 'secret' => secret_key, 'response' => token })
+    result = JSON.parse(response.body)
+    result['success']
   end
 end
