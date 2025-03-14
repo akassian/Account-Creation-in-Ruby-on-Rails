@@ -1,19 +1,7 @@
 
 
 Using TypeScript / React / Vite / Tailwind / Ruby on Rails. 
-### Development
 
-- [TypeScript for JavaScript Programmers](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html)
-- [React docs](https://reactjs.org/docs/hello-world.html)
-- [Tailwind docs](https://tailwindcss.com/docs/installation)
-- [Vite - Getting Started](https://vitejs.dev/guide/)
-- [Ruby on Rails - Getting Started](https://guides.rubyonrails.org/getting_started.html)
-
-### Testing
-
-- [Jest - Getting Started](https://jestjs.io/docs/getting-started)
-- [Testing Rails Applications](https://guides.rubyonrails.org/testing.html)
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/example-intro)
 
 ## Commands
 
