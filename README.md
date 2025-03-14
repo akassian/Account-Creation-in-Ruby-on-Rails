@@ -1,15 +1,6 @@
-# Code Challenge Repository
 
-## Overview
 
-This repository contains boilerplate code you will use to build the create account form.
-
-## Tech used
-
-You have been given a starter repository using TypeScript / React / Vite / Tailwind / Ruby on Rails. You will only need
-a basic understanding of these technologies to successfully complete this coding challenge. Refer to the documentation
-links below for more information.
-
+Using TypeScript / React / Vite / Tailwind / Ruby on Rails. 
 ### Development
 
 - [TypeScript for JavaScript Programmers](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html)
